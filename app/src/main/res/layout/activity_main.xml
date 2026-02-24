@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:gravity="center_horizontal"
+    tools:context=".MainActivity">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Registro FIME"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="32dp"/>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Nombre del Alumno">
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etNombre"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <Space android:layout_width="match_parent" android:layout_height="16dp"/>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Artículo (Libro/Herramienta)">
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etArticulo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <Space android:layout_width="match_parent" android:layout_height="16dp"/>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Días de préstamo">
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etDias"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="number"
+            android:text="3"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <Space android:layout_width="match_parent" android:layout_height="32dp"/>
+
+    <Button
+        android:id="@+id/btnGuardar"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:text="Registrar Préstamo"
+        android:backgroundTint="#1B5E20"/>
+
+    <Button
+        android:id="@+id/btnVerReportes"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Ver Reportes (Admin)"
+        android:layout_marginTop="16dp"/>
+
+</LinearLayout>

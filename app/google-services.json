@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "3937987974",
+    "project_id": "prestamosfime",
+    "storage_bucket": "prestamosfime.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:3937987974:android:a8311fd12c7ebb11bed007",
+        "android_client_info": {
+          "package_name": "com.example.prestamosfime"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC74vkRTOiCenn0MYcGJk3gAujq4GxcaY0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
