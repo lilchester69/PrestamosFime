@@ -1,120 +1,144 @@
 package com.example.prestamosfime
 
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.firestore.FirebaseFirestore
-import java.util.Date
+import java.util.Locale
 
 class ReportesActivity : AppCompatActivity() {
 
+    // Bloque de declaraciones globales
+    private lateinit var rvPrestamos: RecyclerView
+    private lateinit var prestamoAdapter: PrestamoAdapter
+    private val prestamosList = mutableListOf<Prestamo>()
     private val db = FirebaseFirestore.getInstance()
+    private lateinit var txtMasSolicitado: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_reportes)
 
-        val txtMasSolicitado = findViewById<TextView>(R.id.txtMasSolicitado)
-        val txtListaMorosos = findViewById<TextView>(R.id.txtListaMorosos)
+        // Vinculación de vistas
+        txtMasSolicitado = findViewById(R.id.txtMasSolicitado)
         val etNombreDevolucion = findViewById<EditText>(R.id.etNombreDevolucion)
         val btnDevolver = findViewById<Button>(R.id.btnDevolver)
 
-        // 1. Cargar los reportes al abrir la pantalla
-        cargarMasSolicitado(txtMasSolicitado)
-        cargarMorosos(txtListaMorosos)
+        // Configuración de la Tabla (RecyclerView)
+        rvPrestamos = findViewById(R.id.rvPrestamos)
+        rvPrestamos.layoutManager = LinearLayoutManager(this)
+        prestamoAdapter = PrestamoAdapter(prestamosList)
+        rvPrestamos.adapter = prestamoAdapter
 
-        // 2. Acción del botón "Recibir"
+        cargarDatos()
+
+        // Acción: Devolver artículo
         btnDevolver.setOnClickListener {
-            val nombre = etNombreDevolucion.text.toString()
-            if (nombre.isNotEmpty()) {
-                procesarDevolucion(nombre, txtListaMorosos)
-                etNombreDevolucion.text.clear() // Limpiar la cajita
+            val nombreInput = etNombreDevolucion.text.toString().trim()
+
+            if (nombreInput.isNotEmpty()) {
+                finalizarPrestamo(nombreInput)
+                etNombreDevolucion.text.clear()
             } else {
-                Toast.makeText(this, "Escribe un nombre", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Escribe el nombre del alumno", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    // --- LA MAGIA: CAMBIAR ESTATUS A "ENTREGADO" ---
-    private fun procesarDevolucion(nombre: String, txtListaMorosos: TextView) {
-        // Buscamos al alumno en la base de datos
-        db.collection("prestamos")
-            .whereEqualTo("alumno", nombre)
-            .get()
-            .addOnSuccessListener { documentos ->
-                var encontrado = false
+    private fun cargarDatos() {
+        db.collection("prestamos").addSnapshotListener { documentos, error ->
+            if (error != null) {
+                Log.e("FirebaseError", "Error al cargar: ${error.message}")
+                return@addSnapshotListener
+            }
+
+            if (documentos != null) {
+                prestamosList.clear()
+                val conteoArticulos = HashMap<String, Int>()
 
                 for (doc in documentos) {
-                    // Si encontramos su préstamo y sigue PENDIENTE...
-                    if (doc.getString("estatus") == "PENDIENTE") {
-                        // ¡Lo actualizamos a ENTREGADO!
-                        db.collection("prestamos").document(doc.id)
-                            .update("estatus", "ENTREGADO")
-                            .addOnSuccessListener {
-                                Toast.makeText(this, "¡Artículo recibido!", Toast.LENGTH_SHORT).show()
-                                cargarMorosos(txtListaMorosos) // Actualizar lista
-                            }
-                        encontrado = true
-                        break // Solo devolvemos uno por clic
+                    val p = doc.toObject(Prestamo::class.java)
+                    prestamosList.add(p)
+
+                    if (p.articulo.isNotEmpty()) {
+                        conteoArticulos[p.articulo] = conteoArticulos.getOrDefault(p.articulo, 0) + 1
                     }
                 }
-
-                if (!encontrado) {
-                    Toast.makeText(this, "No hay préstamos pendientes para $nombre", Toast.LENGTH_SHORT).show()
-                }
+                prestamoAdapter.notifyDataSetChanged()
+                actualizarMasPedido(conteoArticulos)
             }
-    }
-
-    // --- REPORTE 1: ARTÍCULO MÁS PEDIDO ---
-    private fun cargarMasSolicitado(textView: TextView) {
-        db.collection("prestamos").get().addOnSuccessListener { documentos ->
-            val conteo = HashMap<String, Int>()
-            for (doc in documentos) {
-                val articulo = doc.getString("articulo") ?: continue
-                conteo[articulo] = conteo.getOrDefault(articulo, 0) + 1
-            }
-            var ganador = "Ninguno"
-            var maxVotos = 0
-            for ((articulo, votos) in conteo) {
-                if (votos > maxVotos) {
-                    maxVotos = votos
-                    ganador = articulo
-                }
-            }
-            textView.text = "$ganador ($maxVotos préstamos)"
         }
     }
 
-    // --- REPORTE 2: MOROSOS ---
-    private fun cargarMorosos(textView: TextView) {
+    private fun finalizarPrestamo(nombreAlumno: String) {
+        // Buscamos el préstamo PENDIENTE.
+        // NOTA: Si en tu Firebase guardas nombres con mayúsculas, escríbelos igual al probar.
         db.collection("prestamos")
+            .whereEqualTo("alumno", nombreAlumno)
             .whereEqualTo("estatus", "PENDIENTE")
             .get()
             .addOnSuccessListener { documentos ->
-                val lista = StringBuilder()
-                val hoy = Date()
+                if (documentos.isEmpty) {
+                    Toast.makeText(this, "No se encontró préstamo pendiente para: $nombreAlumno", Toast.LENGTH_LONG).show()
+                    return@addOnSuccessListener
+                }
 
-                for (doc in documentos) {
-                    val fechaLimite = doc.getDate("fechaLimite")
-                    // Si la fecha límite es menor a hoy (ya se venció)
-                    if (fechaLimite != null && fechaLimite.before(hoy)) {
-                        val alumno = doc.getString("alumno")
-                        val articulo = doc.getString("articulo")
-                        lista.append("• $alumno debe: $articulo\n")
+                // Si hay varios, tomamos el primero
+                val docPrestamo = documentos.documents[0]
+                val idPrestamo = docPrestamo.id
+                val nombreArticulo = docPrestamo.getString("articulo") ?: ""
+
+                // PASO 1: Actualizar estatus del préstamo
+                db.collection("prestamos").document(idPrestamo)
+                    .update("estatus", "ENTREGADO")
+                    .addOnSuccessListener {
+                        // PASO 2: Liberar la herramienta en el inventario
+                        if (nombreArticulo.isNotEmpty()) {
+                            liberarArticulo(nombreArticulo)
+                        }
                     }
-                }
+                    .addOnFailureListener { e ->
+                        Toast.makeText(this, "Error al actualizar: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+            }
+            .addOnFailureListener { e ->
+                Log.e("FirebaseError", "Error en consulta: ${e.message}")
+            }
+    }
 
-                if (lista.isEmpty()) {
-                    textView.text = "¡Nadie debe nada! 😇"
+    private fun liberarArticulo(nombreArticulo: String) {
+        db.collection("inventario")
+            .whereEqualTo("nombre", nombreArticulo)
+            .get()
+            .addOnSuccessListener { docs ->
+                if (!docs.isEmpty) {
+                    val idItem = docs.documents[0].id
+                    db.collection("inventario").document(idItem)
+                        .update("disponible", true)
+                        .addOnSuccessListener {
+                            Toast.makeText(this, "✅ $nombreArticulo devuelto y disponible", Toast.LENGTH_SHORT).show()
+                        }
                 } else {
-                    textView.text = lista.toString()
+                    Log.d("Inventario", "No se encontró el artículo $nombreArticulo para liberar")
                 }
             }
-            .addOnFailureListener {
-                textView.text = "Error cargando lista: ${it.message}"
+    }
+
+    private fun actualizarMasPedido(conteo: HashMap<String, Int>) {
+        var ganador = "Ninguno"
+        var max = 0
+        for ((art, total) in conteo) {
+            if (total > max) {
+                max = total
+                ganador = art
             }
+        }
+        txtMasSolicitado.text = "🔥 Lo más pedido: $ganador ($max)"
     }
 }

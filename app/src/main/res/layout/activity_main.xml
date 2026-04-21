@@ -28,16 +28,18 @@
 
     <Space android:layout_width="match_parent" android:layout_height="16dp"/>
 
-    <com.google.android.material.textfield.TextInputLayout
+    <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Artículo (Libro/Herramienta)">
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/etArticulo"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
-    </com.google.android.material.textfield.TextInputLayout>
+        android:text="Selecciona el Artículo:"
+        android:textSize="14sp"
+        android:layout_marginBottom="4dp"/>
 
+    <Spinner
+        android:id="@+id/spArticulo"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="@android:drawable/btn_dropdown"/>
     <Space android:layout_width="match_parent" android:layout_height="16dp"/>
 
     <com.google.android.material.textfield.TextInputLayout
@@ -59,13 +61,20 @@
         android:layout_width="match_parent"
         android:layout_height="60dp"
         android:text="Registrar Préstamo"
-        android:backgroundTint="#1B5E20"/>
-
+        android:backgroundTint="#1B5E20"
+        android:textColor="#FFFFFF"/> <Button
+    android:id="@+id/btnVerReportes"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="Ver Reportes (Admin)"
+    android:layout_marginTop="16dp"/>
     <Button
-        android:id="@+id/btnVerReportes"
+        android:id="@+id/btnGestionInventario"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Ver Reportes (Admin)"
-        android:layout_marginTop="16dp"/>
+        android:layout_height="60dp"
+        android:text="Gestionar Catálogo (Admin)"
+        android:layout_marginTop="12dp"
+        android:backgroundTint="#424242"
+        android:textColor="#FFFFFF"/>
 
 </LinearLayout>
